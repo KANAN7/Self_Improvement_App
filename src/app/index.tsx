@@ -1,9 +1,14 @@
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { Screen, Text } from '@/components';
+import { Button, Screen, Text } from '@/components';
+import { timeAwareGreeting } from '@/lib/date';
 import { spacing } from '@/theme';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const greeting = timeAwareGreeting();
+
   return (
     <Screen>
       <View
@@ -15,16 +20,24 @@ export default function HomeScreen() {
           paddingHorizontal: spacing.lg,
         }}
       >
+        <Text variant="caption" color="textSecondary">
+          {greeting}
+        </Text>
         <Text variant="display" color="textPrimary">
           Inward
         </Text>
         <Text
           variant="caption"
           color="textSecondary"
-          style={{ textAlign: 'center' }}
+          style={{ textAlign: 'center', marginBottom: spacing.xl }}
         >
           If you want to, you will.
         </Text>
+        <Button
+          label="Reflect"
+          onPress={() => router.push('/diary')}
+          fullWidth={false}
+        />
       </View>
     </Screen>
   );
