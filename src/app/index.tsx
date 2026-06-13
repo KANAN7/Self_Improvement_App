@@ -33,11 +33,19 @@ export default function HomeScreen() {
         >
           If you want to, you will.
         </Text>
-        <Button
-          label="Reflect"
-          onPress={() => router.push('/diary')}
-          fullWidth={false}
-        />
+        <View style={{ gap: spacing.md, alignSelf: 'stretch', alignItems: 'center' }}>
+          <Button
+            label="Reflect"
+            onPress={() => router.push('/diary')}
+            fullWidth={false}
+          />
+          <Button
+            label="Capture a thought"
+            variant="ghost"
+            onPress={() => router.push('/thoughts/new')}
+            fullWidth={false}
+          />
+        </View>
       </View>
     </Screen>
   );

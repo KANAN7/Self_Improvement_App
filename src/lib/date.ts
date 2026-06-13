@@ -22,6 +22,14 @@ export function formatEntryDate(date: Date, now: Date = new Date()): string {
   });
 }
 
+export function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 /**
  * Time of day greeting for the home screen.
  */
