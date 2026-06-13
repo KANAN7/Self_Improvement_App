@@ -1,0 +1,23 @@
+{
+  "name": "inward-backend",
+  "version": "1.0.0",
+  "description": "Hono proxy for Inward — AI calls and URL enrichment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@anthropic-ai/sdk": "^0.40.0",
+    "hono": "^4.6.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.3",
+    "tsx": "^4.19.2",
+    "typescript": "~5.9.2"
+  }
+}
