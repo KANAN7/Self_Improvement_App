@@ -51,6 +51,12 @@ export default function HomeScreen() {
             onPress={() => router.push('/vault/new')}
             fullWidth={false}
           />
+          <Button
+            label="Talk to companion"
+            variant="ghost"
+            onPress={() => router.push('/chat')}
+            fullWidth={false}
+          />
         </View>
       </View>
     </Screen>
