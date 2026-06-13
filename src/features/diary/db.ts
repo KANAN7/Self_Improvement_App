@@ -74,3 +74,23 @@ export async function updateEntry(
 export async function deleteEntry(id: string): Promise<void> {
   await db.delete(diaryEntries).where(eq(diaryEntries.id, id));
 }
+
+/**
+ * Updates only the AI observation fields on an entry. Used by the
+ * fire-and-forget analyze flow so it doesn't bump updated_at or stomp
+ * on user edits in flight.
+ */
+export async function setAiObservation(
+  id: string,
+  observation: { summary: string; question: string } | null,
+): Promise<DiaryEntry | undefined> {
+  const [row] = await db
+    .update(diaryEntries)
+    .set({
+      aiSummary: observation?.summary ?? null,
+      aiQuestion: observation?.question ?? null,
+    })
+    .where(eq(diaryEntries.id, id))
+    .returning();
+  return row;
+}

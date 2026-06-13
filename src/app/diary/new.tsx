@@ -2,12 +2,13 @@ import { useRouter } from 'expo-router';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import { Screen, ScreenHeader } from '@/components';
-import { EntryForm, useCreateEntry } from '@/features/diary';
+import { EntryForm, useAnalyzeEntry, useCreateEntry } from '@/features/diary';
 import { spacing } from '@/theme';
 
 export default function NewEntryScreen() {
   const router = useRouter();
   const createEntry = useCreateEntry();
+  const analyzeEntry = useAnalyzeEntry();
 
   return (
     <Screen>
@@ -29,7 +30,9 @@ export default function NewEntryScreen() {
             isSubmitting={createEntry.isPending}
             onSubmit={(values) => {
               createEntry.mutate(values, {
-                onSuccess: () => {
+                onSuccess: (entry) => {
+                  // Fire-and-forget analyze — never block the user
+                  analyzeEntry.mutate(entry);
                   if (router.canGoBack()) router.back();
                   else router.replace('/diary');
                 },

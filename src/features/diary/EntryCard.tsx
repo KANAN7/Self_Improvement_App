@@ -16,14 +16,19 @@ const MOOD_EMOJI: Record<number, string> = {
 type EntryCardProps = {
   entry: DiaryEntry;
   onPress?: () => void;
+  isAnalyzing?: boolean;
 };
 
-export function EntryCard({ entry, onPress }: EntryCardProps) {
+export function EntryCard({ entry, onPress, isAnalyzing }: EntryCardProps) {
   const dateLabel = formatEntryDate(entry.createdAt);
   const moodGlyph = entry.mood ? MOOD_EMOJI[entry.mood] : null;
   const preview = entry.isLocked
     ? 'Locked entry'
     : entry.content.trim().split('\n')[0]?.slice(0, 140) ?? '';
+
+  const showObservation = entry.aiSummary && !entry.isLocked && !entry.aiExcluded;
+  const showAnalyzing =
+    isAnalyzing && !showObservation && !entry.isLocked && !entry.aiExcluded;
 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Entry from ${dateLabel}`}>
@@ -62,7 +67,24 @@ export function EntryCard({ entry, onPress }: EntryCardProps) {
         >
           {preview || 'Untitled entry'}
         </Text>
-        {entry.aiSummary && !entry.isLocked ? (
+        {showObservation ? (
+          <View
+            style={{
+              marginTop: spacing.md,
+              paddingTop: spacing.sm,
+              borderTopWidth: 1,
+              borderTopColor: colors.bg,
+              gap: spacing.xs,
+            }}
+          >
+            <Text variant="caption" color="textSecondary" style={{ fontStyle: 'italic' }}>
+              {entry.aiSummary}
+            </Text>
+            <Text variant="micro" color="textSecondary">
+              ℹ Based on your recent entries
+            </Text>
+          </View>
+        ) : showAnalyzing ? (
           <View
             style={{
               marginTop: spacing.md,
@@ -71,8 +93,8 @@ export function EntryCard({ entry, onPress }: EntryCardProps) {
               borderTopColor: colors.bg,
             }}
           >
-            <Text variant="caption" color="textSecondary" style={{ fontStyle: 'italic' }}>
-              {entry.aiSummary}
+            <Text variant="micro" color="textSecondary">
+              Reflecting…
             </Text>
           </View>
         ) : null}

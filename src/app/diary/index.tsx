@@ -2,12 +2,13 @@ import { useRouter } from 'expo-router';
 import { FlatList, Pressable, View } from 'react-native';
 
 import { Screen, ScreenHeader, Text } from '@/components';
-import { EntryCard, useDiaryEntries } from '@/features/diary';
+import { EntryCard, useAnalyzingIds, useDiaryEntries } from '@/features/diary';
 import { colors, spacing } from '@/theme';
 
 export default function DiaryListScreen() {
   const router = useRouter();
   const { data: entries = [], isLoading } = useDiaryEntries();
+  const analyzingIds = useAnalyzingIds();
 
   return (
     <Screen>
@@ -39,7 +40,11 @@ export default function DiaryListScreen() {
           contentContainerStyle={{ gap: spacing.md, paddingBottom: spacing.xl }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <EntryCard entry={item} onPress={() => router.push(`/diary/${item.id}`)} />
+            <EntryCard
+              entry={item}
+              isAnalyzing={analyzingIds.has(item.id)}
+              onPress={() => router.push(`/diary/${item.id}`)}
+            />
           )}
         />
       )}

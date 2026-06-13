@@ -113,3 +113,21 @@ export async function deleteEntry(id: string): Promise<void> {
   const all = loadAll().filter((row) => row.id !== id);
   saveAll(all);
 }
+
+export async function setAiObservation(
+  id: string,
+  observation: { summary: string; question: string } | null,
+): Promise<DiaryEntry | undefined> {
+  const all = loadAll();
+  const idx = all.findIndex((row) => row.id === id);
+  if (idx === -1) return undefined;
+  const existing = all[idx]!;
+  const updated: StoredEntry = {
+    ...existing,
+    aiSummary: observation?.summary ?? null,
+    aiQuestion: observation?.question ?? null,
+  };
+  all[idx] = updated;
+  saveAll(all);
+  return hydrate(updated);
+}

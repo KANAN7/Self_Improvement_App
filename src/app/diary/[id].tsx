@@ -2,9 +2,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
-import { Screen, ScreenHeader, Text } from '@/components';
+import { Card, Screen, ScreenHeader, Text } from '@/components';
 import {
   EntryForm,
+  useAnalyzeEntry,
+  useAnalyzingIds,
   useDeleteEntry,
   useDiaryEntry,
   useUpdateEntry,
@@ -17,6 +19,8 @@ export default function EditEntryScreen() {
   const { data: entry, isLoading } = useDiaryEntry(id);
   const updateEntry = useUpdateEntry(id ?? '');
   const deleteEntry = useDeleteEntry();
+  const analyzeEntry = useAnalyzeEntry();
+  const analyzingIds = useAnalyzingIds();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const goBack = () => {
@@ -99,6 +103,11 @@ export default function EditEntryScreen() {
               </View>
             ) : null}
 
+            <ObservationBlock
+              entry={entry}
+              isAnalyzing={analyzingIds.has(entry.id)}
+            />
+
             <EntryForm
               key={entry.id}
               initial={{
@@ -113,12 +122,58 @@ export default function EditEntryScreen() {
               submitLabel={updateEntry.isPending ? 'Saving…' : 'Save'}
               isSubmitting={updateEntry.isPending}
               onSubmit={(values) => {
-                updateEntry.mutate(values, { onSuccess: goBack });
+                updateEntry.mutate(values, {
+                  onSuccess: (updated) => {
+                    // Re-analyze on edit (only if not excluded/locked)
+                    analyzeEntry.mutate(updated);
+                    goBack();
+                  },
+                });
               }}
             />
           </ScrollView>
         </KeyboardAvoidingView>
       )}
     </Screen>
+  );
+}
+
+type ObservationBlockProps = {
+  entry: NonNullable<ReturnType<typeof useDiaryEntry>['data']>;
+  isAnalyzing: boolean;
+};
+
+function ObservationBlock({ entry, isAnalyzing }: ObservationBlockProps) {
+  if (entry.isLocked || entry.aiExcluded) return null;
+
+  const hasObservation = Boolean(entry.aiSummary);
+  if (!hasObservation && !isAnalyzing) return null;
+
+  return (
+    <Card>
+      {isAnalyzing && !hasObservation ? (
+        <Text variant="caption" color="textSecondary">
+          Reflecting on your entry…
+        </Text>
+      ) : (
+        <View style={{ gap: spacing.sm }}>
+          <Text
+            variant="body"
+            color="textPrimary"
+            style={{ fontStyle: 'italic' }}
+          >
+            {entry.aiSummary}
+          </Text>
+          {entry.aiQuestion ? (
+            <Text variant="body" color="accentSage" style={{ fontStyle: 'italic' }}>
+              {entry.aiQuestion}
+            </Text>
+          ) : null}
+          <Text variant="micro" color="textSecondary">
+            ℹ Based on your recent entries
+          </Text>
+        </View>
+      )}
+    </Card>
   );
 }
