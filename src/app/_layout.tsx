@@ -1,15 +1,72 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import '../global.css';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Inter_400Regular, Inter_500Medium } from '@expo-google-fonts/inter';
+import { Lora_400Regular, Lora_600SemiBold } from '@expo-google-fonts/lora';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
+import { useEffect, useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+import { initializeDatabase } from '@/lib/db';
+import { colors } from '@/theme';
+
+void SplashScreen.preventAutoHideAsync();
+void SystemUI.setBackgroundColorAsync(colors.bg);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false },
+  },
+});
+
+export default function RootLayout() {
+  const [dbReady, setDbReady] = useState(false);
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Lora_400Regular,
+    Lora_600SemiBold,
+  });
+
+  useEffect(() => {
+    try {
+      initializeDatabase();
+      setDbReady(true);
+    } catch (error) {
+      console.error('Failed to initialize database', error);
+      setDbReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && dbReady) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, dbReady]);
+
+  if (!fontsLoaded || !dbReady) {
+    return null;
+  }
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: 'fade',
+            }}
+          />
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
