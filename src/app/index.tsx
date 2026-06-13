@@ -45,6 +45,12 @@ export default function HomeScreen() {
             onPress={() => router.push('/thoughts/new')}
             fullWidth={false}
           />
+          <Button
+            label="Save a link"
+            variant="ghost"
+            onPress={() => router.push('/vault/new')}
+            fullWidth={false}
+          />
         </View>
       </View>
     </Screen>
