@@ -12,6 +12,13 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import {
+  isBiometricEnabled,
+  isPasscodeSet,
+  LockGate,
+  useEntryUnlocks,
+  useLock,
+} from '@/features/privacy';
 import { initializeDatabase } from '@/lib/db';
 import { colors } from '@/theme';
 
@@ -33,6 +40,11 @@ export default function RootLayout() {
     Lora_600SemiBold,
   });
 
+  const lockReady = useLock((s) => s.ready);
+  const lockUnlocked = useLock((s) => s.unlocked);
+  const setLockReady = useLock((s) => s.setReady);
+  const clearEntryUnlocks = useEntryUnlocks((s) => s.clear);
+
   useEffect(() => {
     try {
       initializeDatabase();
@@ -44,12 +56,24 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded && dbReady) {
+    void (async () => {
+      const [passcodeSet, biometricEnabled] = await Promise.all([
+        isPasscodeSet(),
+        isBiometricEnabled(),
+      ]);
+      setLockReady({ passcodeSet, biometricEnabled });
+      // App start = fresh session = wipe any stale per-entry unlocks.
+      clearEntryUnlocks();
+    })();
+  }, [setLockReady, clearEntryUnlocks]);
+
+  useEffect(() => {
+    if (fontsLoaded && dbReady && lockReady) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, dbReady]);
+  }, [fontsLoaded, dbReady, lockReady]);
 
-  if (!fontsLoaded || !dbReady) {
+  if (!fontsLoaded || !dbReady || !lockReady) {
     return null;
   }
 
@@ -58,13 +82,17 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-              animation: 'fade',
-            }}
-          />
+          {lockUnlocked ? (
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.bg },
+                animation: 'fade',
+              }}
+            />
+          ) : (
+            <LockGate />
+          )}
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

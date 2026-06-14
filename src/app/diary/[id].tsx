@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
-import { Card, Screen, ScreenHeader, Text } from '@/components';
+import { Button, Card, Screen, ScreenHeader, Text, TextInput } from '@/components';
 import {
   EntryForm,
   useAnalyzeEntry,
@@ -11,6 +11,7 @@ import {
   useDiaryEntry,
   useUpdateEntry,
 } from '@/features/diary';
+import { requestEntryUnlock, useEntryUnlocks } from '@/features/privacy';
 import { spacing } from '@/theme';
 
 export default function EditEntryScreen() {
@@ -22,6 +23,8 @@ export default function EditEntryScreen() {
   const analyzeEntry = useAnalyzeEntry();
   const analyzingIds = useAnalyzingIds();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const unlockedEntryIds = useEntryUnlocks((s) => s.unlocked);
+  const isLocked = Boolean(entry?.isLocked) && !unlockedEntryIds.has(entry?.id ?? '');
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -70,6 +73,8 @@ export default function EditEntryScreen() {
             Loading…
           </Text>
         </View>
+      ) : isLocked ? (
+        <LockedEntryPrompt entryId={entry.id} />
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -135,6 +140,64 @@ export default function EditEntryScreen() {
         </KeyboardAvoidingView>
       )}
     </Screen>
+  );
+}
+
+type LockedEntryPromptProps = {
+  entryId: string;
+};
+
+function LockedEntryPrompt({ entryId }: LockedEntryPromptProps) {
+  const [passcode, setPasscode] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [showPasscode, setShowPasscode] = useState(false);
+
+  const tryUnlock = async () => {
+    setError(null);
+    const ok = await requestEntryUnlock({
+      entryId,
+      promptForPasscode: () => {
+        // Surface the inline passcode field if biometric was declined.
+        setShowPasscode(true);
+        return Promise.resolve(passcode || null);
+      },
+    });
+    if (!ok) {
+      setError('Couldn\'t unlock. Try again.');
+    }
+  };
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.lg,
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text variant="body" color="textSecondary">
+        🔒 This entry is locked.
+      </Text>
+      {showPasscode ? (
+        <TextInput
+          value={passcode}
+          onChangeText={setPasscode}
+          placeholder="Passcode"
+          keyboardType="number-pad"
+          secureTextEntry
+          maxLength={6}
+          style={{ width: 200, textAlign: 'center', letterSpacing: 8, fontSize: 22 }}
+        />
+      ) : null}
+      {error ? (
+        <Text variant="caption" color="moodRose">
+          {error}
+        </Text>
+      ) : null}
+      <Button label="Unlock" onPress={tryUnlock} fullWidth={false} />
+    </View>
   );
 }
 

@@ -11,12 +11,15 @@
     "drizzle-orm": "^0.45.2",
     "expo": "~54.0.0",
     "expo-constants": "~18.0.13",
+    "expo-crypto": "~15.0.9",
+    "expo-file-system": "~19.0.23",
     "expo-font": "~14.0.12",
     "expo-haptics": "~15.0.8",
     "expo-linking": "~8.0.12",
     "expo-local-authentication": "~17.0.8",
     "expo-router": "~6.0.24",
     "expo-secure-store": "~15.0.8",
+    "expo-sharing": "~14.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "~16.0.10",
     "expo-status-bar": "~3.0.9",
@@ -40,7 +43,8 @@
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.31.10",
     "prettier": "^3.8.4",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.8"
   },
   "scripts": {
     "start": "expo start",
@@ -48,7 +52,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "private": true
 }

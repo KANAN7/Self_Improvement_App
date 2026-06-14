@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Button, Screen, Text } from '@/components';
 import { timeAwareGreeting } from '@/lib/date';
@@ -58,6 +58,17 @@ export default function HomeScreen() {
             fullWidth={false}
           />
         </View>
+        <Pressable
+          onPress={() => router.push('/settings')}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          hitSlop={12}
+          style={{ marginTop: spacing.xl }}
+        >
+          <Text variant="caption" color="textSecondary">
+            Settings
+          </Text>
+        </Pressable>
       </View>
     </Screen>
   );
