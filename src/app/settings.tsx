@@ -15,8 +15,6 @@ import {
   clearPasscode,
   exportData,
   getBiometricCapability,
-  isBiometricEnabled,
-  isPasscodeSet,
   setBiometricEnabled,
   setPasscode,
   useLock,
@@ -92,11 +90,16 @@ export default function SettingsScreen() {
     setBiometricEnabledStore(next);
   };
 
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
   const handleExport = async () => {
+    setExportStatus('Preparing…');
     const result = await exportData();
-    if (Platform.OS === 'web') return; // browser handled the download
-    if (result.ok) return;
-    Alert.alert('Export failed', result.reason);
+    if (result.ok) {
+      setExportStatus(Platform.OS === 'web' ? 'Downloaded.' : 'Shared.');
+    } else {
+      setExportStatus(`Couldn't export: ${result.reason}`);
+    }
+    setTimeout(() => setExportStatus(null), 4000);
   };
 
   return (
@@ -208,6 +211,11 @@ export default function SettingsScreen() {
                 and chat. No auth secrets are included.
               </Text>
               <Button label="Export" onPress={handleExport} />
+              {exportStatus ? (
+                <Text variant="caption" color="textSecondary">
+                  {exportStatus}
+                </Text>
+              ) : null}
             </View>
           </Card>
         </SettingsSection>

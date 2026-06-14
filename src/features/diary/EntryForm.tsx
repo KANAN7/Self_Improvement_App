@@ -37,6 +37,7 @@ export function EntryForm({
   const [focus, setFocus] = useState<number>(initial?.focus ?? 3);
   const [whatHelped, setWhatHelped] = useState(initial?.whatHelped ?? '');
   const [aiExcluded, setAiExcluded] = useState(initial?.aiExcluded ?? false);
+  const [isLocked, setIsLocked] = useState(initial?.isLocked ?? false);
 
   const canSubmit = content.trim().length > 0 && !isSubmitting;
 
@@ -49,7 +50,7 @@ export function EntryForm({
       focus,
       whatHelped: whatHelped.trim() ? whatHelped.trim() : null,
       aiExcluded,
-      isLocked: initial?.isLocked ?? false,
+      isLocked,
     });
   };
 
@@ -95,6 +96,13 @@ export function EntryForm({
         description="Excluded from AI context."
         value={aiExcluded}
         onChange={setAiExcluded}
+      />
+
+      <Switch
+        label="Lock this entry"
+        description="Requires biometric or passcode to view."
+        value={isLocked}
+        onChange={setIsLocked}
       />
 
       <Button
