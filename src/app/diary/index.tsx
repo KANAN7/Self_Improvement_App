@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 
-import { Screen, ScreenHeader, Text } from '@/components';
+import { PlusButton, Screen, ScreenHeader, Text } from '@/components';
 import { EntryCard, useAnalyzingIds, useDiaryEntries } from '@/features/diary';
 import { colors, spacing } from '@/theme';
 
@@ -16,16 +16,10 @@ export default function DiaryListScreen() {
         title="Reflect"
         showBack
         rightSlot={
-          <Pressable
+          <PlusButton
             onPress={() => router.push('/diary/new')}
-            accessibilityRole="button"
             accessibilityLabel="New entry"
-            hitSlop={12}
-          >
-            <Text variant="body" color="accentGold">
-              +
-            </Text>
-          </Pressable>
+          />
         }
       />
 

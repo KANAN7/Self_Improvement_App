@@ -40,15 +40,15 @@ export default function HomeScreen() {
             fullWidth={false}
           />
           <Button
-            label="Capture a thought"
+            label="Thoughts"
             variant="ghost"
-            onPress={() => router.push('/thoughts/new')}
+            onPress={() => router.push('/thoughts')}
             fullWidth={false}
           />
           <Button
-            label="Save a link"
+            label="Vault"
             variant="ghost"
-            onPress={() => router.push('/vault/new')}
+            onPress={() => router.push('/vault')}
             fullWidth={false}
           />
           <Button

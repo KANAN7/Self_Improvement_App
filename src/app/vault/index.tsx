@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Linking, FlatList, Pressable, View } from 'react-native';
 
-import { Screen, ScreenHeader, Text } from '@/components';
+import { PlusButton, Screen, ScreenHeader, Text } from '@/components';
 import { useVaultItems, VaultCard } from '@/features/vault';
 import { spacing } from '@/theme';
 
@@ -15,16 +15,10 @@ export default function VaultListScreen() {
         title="Vault"
         showBack
         rightSlot={
-          <Pressable
+          <PlusButton
             onPress={() => router.push('/vault/new')}
-            accessibilityRole="button"
             accessibilityLabel="Save a link"
-            hitSlop={12}
-          >
-            <Text variant="body" color="accentGold">
-              +
-            </Text>
-          </Pressable>
+          />
         }
       />
 

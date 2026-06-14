@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 
-import { Screen, ScreenHeader, Text, TextInput } from '@/components';
+import { PlusButton, Screen, ScreenHeader, Text, TextInput } from '@/components';
 import { ThoughtCard, useThoughts } from '@/features/thoughts';
 import { spacing } from '@/theme';
 
@@ -17,16 +17,10 @@ export default function ThoughtsListScreen() {
         title="Thoughts"
         showBack
         rightSlot={
-          <Pressable
+          <PlusButton
             onPress={() => router.push('/thoughts/new')}
-            accessibilityRole="button"
             accessibilityLabel="New thought"
-            hitSlop={12}
-          >
-            <Text variant="body" color="accentGold">
-              +
-            </Text>
-          </Pressable>
+          />
         }
       />
 

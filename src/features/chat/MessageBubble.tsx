@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { Text } from '@/components';
+import { Markdown, Text } from '@/components';
 import type { ChatMessage } from '@/lib/db/schema';
 import { colors, radius, spacing } from '@/theme';
 
@@ -50,11 +50,14 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
           <Text variant="body" color="textSecondary">
             …
           </Text>
-        ) : (
+        ) : isStreaming ? (
+          // Plain text + cursor while streaming — markdown formatting would
+          // flicker as partial tokens arrive. Render markdown once complete.
           <Text variant="body" color="textPrimary" style={{ lineHeight: 24 }}>
-            {trimmed}
-            {isStreaming ? '▍' : ''}
+            {trimmed}▍
           </Text>
+        ) : (
+          <Markdown text={trimmed} color="textPrimary" />
         )}
       </View>
       {message.contextBasis && !isStreaming ? (

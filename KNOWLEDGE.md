@@ -20,6 +20,7 @@ A living reference for the concepts, vocabulary, and architecture decisions behi
 10. [DevOps / Git / Tooling vocabulary](#section-4--devops--git--tooling)
 11. [The 12 most important terms to memorize](#the-12-terms-most-worth-memorizing)
 12. [Beginner Q&A](#beginner-qa)
+13. [Developer workflow notes](#developer-workflow-notes)
 
 ---
 
@@ -1468,3 +1469,177 @@ The phone, the backend, and Anthropic are three separate parties. **The backend 
 ---
 
 *End of Q&A. Bring more questions whenever they come up — this file is meant to grow.*
+
+---
+
+## Developer workflow notes
+
+Practical, hands-on stuff you'll trip over running this project. Append to it whenever something bites you.
+
+### `npm start` vs `npm run dev` (and why we use both)
+
+The project has **two separate Node projects** — the app and the backend — and each has its own scripts.
+
+```
+project root/                ← run "npm start" here  (boots the app)
+└── backend/                 ← run "npm run dev" here  (boots the backend)
+```
+
+#### `npm start` (app, project root)
+
+Defined in [package.json](package.json):
+
+```json
+"start": "expo start"
+```
+
+- Boots the **Expo dev server** (Metro bundler) for the React Native app
+- Serves JS to your phone via Expo Go (after scanning the QR) and to your browser at `localhost`
+- Runs from the project root
+
+**Use it when**: you want to run/test the app itself.
+
+#### `npm run dev` (backend, in `backend/`)
+
+Defined in [backend/package.json](backend/package.json):
+
+```json
+"dev": "tsx watch --env-file=.env src/index.ts"
+```
+
+- Boots the **Hono backend** server on `localhost:3000`
+- `tsx` runs the TypeScript file directly without a separate compile step
+- `watch` auto-restarts the server whenever you save backend code
+- `--env-file=.env` tells Node 22 to load `backend/.env` into `process.env` at startup
+- Runs from inside `backend/`
+
+**Use it when**: you want the backend running so AI calls and URL enrichment work.
+
+#### Why the names differ
+
+There's a long-standing npm convention:
+
+- **`npm start`** is *special* — npm treats it as the canonical entry point. You can call it without `run` (`npm start` works without `npm run start`). Usually means "run the canonical thing" (often production-like).
+- **`npm run <anything-else>`** is generic — every other custom script needs `run` in front of it.
+- **`dev`** is a community convention for "development mode with hot-reload, source maps, helpful errors."
+
+Our backend uses `dev` because we'll likely add a separate `start` script later that runs the *compiled* JS for production (`node dist/index.js`). The `dev` name signals "development mode with auto-restart."
+
+The Expo CLI assumes `start` is the dev server, which is why the app uses `npm start` instead of `npm run dev`. Expo handles dev/prod differences via flags rather than separate scripts.
+
+#### What you'd typically do during a dev session
+
+```
+Terminal 1 (project root):     Terminal 2 (backend folder):
+─────────────────────────       ────────────────────────────
+$ cd <project root>             $ cd backend
+$ npm start                     $ npm run dev
+
+[Metro bundler running]         [Hono running on port 3000]
+[QR code shown for phone]       [Watching for file changes]
+```
+
+Both stay running. You leave them alone and code in a third terminal or directly in VS Code.
+
+### Why the backend script has `--env-file=.env`
+
+`tsx 4+` does **not** automatically load `.env` files. Older versions did; this changed in early 2024. If you delete the `--env-file=.env` flag from the dev script, the backend will boot but `process.env.ANTHROPIC_API_KEY` will be `undefined`, and every `/ai/*` call will return `503 ai_not_configured`.
+
+`--env-file=.env` is a **Node 22+** built-in flag (no library needed). It reads the file at process start and merges it into `process.env`.
+
+If you ever swap to a different Node version or runtime (Bun, Deno), you'll need a different mechanism. The cleanest replacement would be `import 'dotenv/config'` at the top of `backend/src/index.ts` — but that adds a dependency we don't need today.
+
+### Two-terminal mental model
+
+For full functionality you need **both** running at once:
+
+| Want | Need |
+|---|---|
+| Just look at the home screen, vault, diary entries | App only |
+| Save a diary entry and see an AI observation | App + backend |
+| Use chat companion | App + backend |
+| Paste a URL and get rich preview (title + thumbnail) | App + backend |
+| Read the README and pretend you're working | Just a coffee |
+
+If the backend is down, the app stays usable for everything except AI features and URL enrichment. The app is **local-first** (KNOWLEDGE.md §architecture) — diary CRUD, thoughts, vault all work offline against local SQLite.
+
+### Common boot errors
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `EADDRINUSE: address already in use :::3000` | A previous backend is still running and holding port 3000 | Find the PID with `netstat -ano \| findstr ":3000"`, then `Stop-Process -Id <pid> -Force` (PowerShell) |
+| `[inward-backend] ANTHROPIC_API_KEY not set` | Either no `.env` file, or `tsx` isn't reading it | Confirm `backend/.env` exists; confirm the dev script has `--env-file=.env` |
+| `Cannot find module 'tsx'` | Backend deps aren't installed | `cd backend && npm install` |
+| `expo: command not found` (when running `npm start`) | App deps aren't installed | `npm install` from project root |
+| Backend output mentions Sonnet | `INWARD_DEV_MODEL` is wrong, or `NODE_ENV=production` flipped | Check `.env` lines 6 + 11 |
+| Phone says "Failed to download remote update" | Phone can't reach Metro on the LAN | Check Wi-Fi (same network), Windows Firewall, or use `--tunnel` (which we ruled out — see [tunneling note](#tunneling-tools-rejected)) |
+
+### Stopping the backend
+
+In the terminal where it's running, press **`Ctrl+C`** once. Wait until you see the prompt return. If it doesn't return after 5 seconds, press `Ctrl+C` again.
+
+If you ever close the terminal without `Ctrl+C` (or VS Code crashes), the Node process can leak — port 3000 stays held until the next reboot. The fix is the `Stop-Process -Id <pid>` recipe in the table above.
+
+### Tunneling tools rejected
+
+We **do not** use `npx expo start --tunnel` or any other ngrok-based path. Reasons:
+
+1. The local-first architecture doesn't need it — phone reaches dev backend over LAN
+2. ngrok was actively flagged as a compliance/security concern in the project context (corporate firewall scanning)
+3. It adds a third-party dependency for a problem we don't have
+
+When the phone needs to reach Metro:
+- Same Wi-Fi as the PC, OR
+- Phone hotspot (PC connects to it), OR
+- For the AI backend specifically: same Wi-Fi, IP detected from `Constants.expoConfig.hostUri` (see [src/lib/backend.ts](src/lib/backend.ts))
+
+If a workflow seems to require a tunnel, treat it as a red flag — there's almost always a flat-network alternative.
+
+### File-level project structure
+
+For the visual learners. Top-level layout (matches CLAUDE.md §2):
+
+```
+project root
+├── src/                      ← App code (React Native + Expo Router)
+│   ├── app/                  ← Routes (Expo Router file-based: /diary, /thoughts, etc.)
+│   ├── components/           ← Reusable UI primitives
+│   ├── features/             ← Feature folders, each self-contained
+│   │   ├── diary/
+│   │   ├── thoughts/
+│   │   ├── vault/
+│   │   ├── chat/
+│   │   ├── settings/
+│   │   └── privacy/
+│   ├── lib/                  ← Cross-cutting helpers (db, ai client, date, id, url)
+│   ├── stores/               ← Zustand UI stores
+│   └── theme/                ← Colors, typography, spacing tokens
+├── backend/                  ← Hono server (separate Node project)
+│   ├── src/
+│   ├── package.json          ← Backend deps + scripts
+│   └── .env                  ← Secrets (gitignored)
+├── package.json              ← App deps + scripts
+├── CLAUDE.md                 ← Build spec
+├── KNOWLEDGE.md              ← This file
+└── .gitignore
+```
+
+Each feature folder is self-contained (per CLAUDE.md §8): DB layer, hooks, components, screens — all colocated. You should be able to delete a feature folder and only the routes that import it should break.
+
+### `.env` files: never read, never commit
+
+The convention used throughout this project:
+
+- `.env.example` — committed to git, holds blank placeholders. Safe to share.
+- `.env` — local-only, holds real secrets. **Always** in `.gitignore`. Never opened with the Read tool by an agent (per `dotenv-handling` memory). Verified by `awk` showing only key names + value lengths.
+
+If a secret ever leaks (into chat, screenshot, paste, accidental commit), the only safe response is:
+1. Revoke the key at its issuer (Anthropic console → revoke)
+2. Generate a fresh one
+3. Paste the new one into `.env`
+
+Don't try to "secure-delete" the leaked one. Once a string has been somewhere it shouldn't be, treat it as compromised even if the chance of misuse is low.
+
+---
+
+*End of developer workflow notes. Add to this section whenever you discover a sharp edge worth documenting.*
