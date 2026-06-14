@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Linking, FlatList, Pressable, View } from 'react-native';
 
-import { PlusButton, Screen, ScreenHeader, Text } from '@/components';
+import { PlusButton, Screen, ScreenHeader, SkeletonList, Text } from '@/components';
 import { useVaultItems, VaultCard } from '@/features/vault';
 import { spacing } from '@/theme';
 
@@ -23,7 +23,7 @@ export default function VaultListScreen() {
       />
 
       {isLoading ? (
-        <EmptyState message="Loading…" />
+        <SkeletonList count={2} />
       ) : items.length === 0 ? (
         <EmptyState message="Nothing here yet. Tap + to save something worth returning to." />
       ) : (

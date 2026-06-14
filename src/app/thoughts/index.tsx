@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, View } from 'react-native';
 
-import { PlusButton, Screen, ScreenHeader, Text, TextInput } from '@/components';
+import { PlusButton, Screen, ScreenHeader, SkeletonList, Text, TextInput } from '@/components';
 import { ThoughtCard, useThoughts } from '@/features/thoughts';
 import { spacing } from '@/theme';
 
@@ -34,7 +34,7 @@ export default function ThoughtsListScreen() {
       />
 
       {isLoading ? (
-        <EmptyState message="Loading…" />
+        <SkeletonList count={3} />
       ) : thoughts.length === 0 ? (
         <EmptyState
           message={

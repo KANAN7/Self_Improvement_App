@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useOnboarding } from '@/features/onboarding';
 import {
   isBiometricEnabled,
   isPasscodeSet,
@@ -44,6 +45,8 @@ export default function RootLayout() {
   const lockUnlocked = useLock((s) => s.unlocked);
   const setLockReady = useLock((s) => s.setReady);
   const clearEntryUnlocks = useEntryUnlocks((s) => s.clear);
+  const onboardingReady = useOnboarding((s) => s.ready);
+  const resolveOnboarding = useOnboarding((s) => s.resolve);
 
   useEffect(() => {
     try {
@@ -68,12 +71,16 @@ export default function RootLayout() {
   }, [setLockReady, clearEntryUnlocks]);
 
   useEffect(() => {
-    if (fontsLoaded && dbReady && lockReady) {
+    void resolveOnboarding();
+  }, [resolveOnboarding]);
+
+  useEffect(() => {
+    if (fontsLoaded && dbReady && lockReady && onboardingReady) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, dbReady, lockReady]);
+  }, [fontsLoaded, dbReady, lockReady, onboardingReady]);
 
-  if (!fontsLoaded || !dbReady || !lockReady) {
+  if (!fontsLoaded || !dbReady || !lockReady || !onboardingReady) {
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { FlatList, View } from 'react-native';
 
-import { PlusButton, Screen, ScreenHeader, Text } from '@/components';
+import { PlusButton, Screen, ScreenHeader, SkeletonList, Text } from '@/components';
 import { EntryCard, useAnalyzingIds, useDiaryEntries } from '@/features/diary';
 import { colors, spacing } from '@/theme';
 
@@ -24,7 +24,7 @@ export default function DiaryListScreen() {
       />
 
       {isLoading ? (
-        <EmptyState message="Loading…" />
+        <SkeletonList count={3} />
       ) : entries.length === 0 ? (
         <EmptyState message="Nothing here yet. Tap + to write something." />
       ) : (
